@@ -24,30 +24,19 @@ class EntryPoint
 
         if (args.Length > 0 && args[0] == "list")
         {
-            string categoryName = "";
-            for (int i = 1; i < args.Length; i++)
-            {
-                if (i > 1)
-                {
-                    categoryName += " ";
-                }
-                categoryName += args[i];
-            }
+            var categoryName = string.Join(" ", args, 1, args.Length - 1);
 
             var channels = await channelsService.GetChannels();
             var programSummariesList = await programSummariesService.GetProgramSummaries(channels, categoryName);
 
-            foreach (var summaries in programSummariesList)
-            {
-                Console.Write(String.Format("{0,-15}", channels.Where(x => x.Id == summaries.Id).First().Title));
-                foreach (var programSummary in summaries.Programs)
-                {
-                    Console.Write(" [" + programSummary.Start.ToShortTimeString() + "] ");
-                    Console.Write(programSummary.Title);
-                }
-                Console.WriteLine();
-            }
+            var programTitlesList = programSummariesList.Select(x => 
+                string.Format("{0,-15}", channels.First(c => c.Id == x.Id).Title)
+                + string.Join("", x.Programs.Select(y => string.Format(" [{0}] {1}{2}", y.Start.ToShortTimeString(), y.Title, (y.Live ? " [Live]": "")))));
 
+            foreach (var programTitles in programTitlesList)
+            {
+                Console.WriteLine(programTitles);
+            }
         }
         Console.WriteLine();
     }
